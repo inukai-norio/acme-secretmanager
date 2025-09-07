@@ -15,6 +15,8 @@ sam build
 sam deploy
 ```
 
+4. 初回のローテーションを行う
+
 ## パラメータ選択指定方法
 
 TODO
