@@ -31,10 +31,10 @@ Resources:
     Properties:
       Name: /acme/priveteKey/type
       Type: String
-      Value: ecdsa
+      Value: rsa
   ParameterPAC:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: /acme/priveteKey/curve
+      Name: /acme/priveteKey/keySize
       Type: String
-      Value: P-384
+      Value: 2048
