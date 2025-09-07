@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+  ParameterACT:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /acme/acountkey/type
+      Type: String
+      Value: ecdsa
+  ParameterACC:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /acme/acountkey/curve
+      Type: String
+      Value: P-384
+  ParameterEmail:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /acme/email
+      Type: String
+      Value: 'example@example.com'
+  ParameterDU:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /acme/directoryUrl
+      Type: String
+      Value: 'https://acme-staging-v02.api.letsencrypt.org/directory' # let's encrypt ステージング環境
+
+  ParameterPAT:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /acme/priveteKey/type
+      Type: String
+      Value: ecdsa
+  ParameterPAC:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /acme/priveteKey/curve
+      Type: String
+      Value: P-384

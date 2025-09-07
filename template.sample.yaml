@@ -1,0 +1,127 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Globals:
+  Function:
+    Runtime: nodejs22.x
+    Timeout: 60
+    Handler: src/index.handler
+    Architectures:
+      - arm64
+
+Parameters:
+  Domain:
+    Type: String
+  Zoneid:
+    Type: AWS::Route53::HostedZone::Id
+  AcmeParametersPrefix:
+    Type: String
+
+Resources:
+  IAMCreateAccount:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 
+                - 'lambda.amazonaws.com'
+            Action: 
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
+      Policies:
+        - PolicyName: SSMGetParameterACME
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ssm:GetParameter'
+                  - 'ssm:GetParametersByPath'
+                Resource: !Sub 'arn:aws:ssm:*:${AWS::AccountId}:parameter/${AcmeParametersPrefix}/*'
+        - PolicyName: Route53
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'route53:*'
+                Resource: '*'
+
+  FunctionCreateAccount:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: createAndUpdateAccount/
+      Role: !GetAtt IAMCreateAccount.Arn
+      Environment:
+        Variables:
+          AcmeParametersPrefix: !Ref AcmeParametersPrefix
+    Metadata:
+      BuildMethod: makefile
+      BuildProperties:
+        BaseDirectory: createAndUpdateAccount
+
+  RotationFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref FunctionCreateAccount
+      Action: lambda:InvokeFunction
+      Principal: secretsmanager.amazonaws.com
+
+  MySecretA:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: accountKey
+      Description: 'account key'
+      SecretString: '{"accountKey": ""}'
+
+  MySecretARotationSchedule:
+    Type: AWS::SecretsManager::RotationSchedule
+    Properties:
+      SecretId: !Ref MySecretA
+      RotationLambdaARN: !GetAtt FunctionCreateAccount.Arn
+      RotationRules:
+        AutomaticallyAfterDays: 61
+
+  FunctionCreateCertificate:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: createAndUpdateCertificate/
+      Timeout: 600 # 200
+      Role: !GetAtt IAMCreateAccount.Arn
+      Environment:
+        Variables:
+          Domain: !Ref Domain
+          Zoneid: !Ref Zoneid
+          AcmeParametersPrefix: !Ref AcmeParametersPrefix
+    Metadata:
+      BuildMethod: makefile
+      BuildProperties:
+        BaseDirectory: createAndUpdateCertificate
+
+  MySecretC:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: priveteKey
+      Description: 'priveteKey key'
+      SecretString: '{"key": "", "crt": ""}'
+
+  RotationFunctionPermissionC:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref FunctionCreateCertificate
+      Action: lambda:InvokeFunction
+      Principal: secretsmanager.amazonaws.com
+
+  MySecretARotationScheduleC:
+    Type: AWS::SecretsManager::RotationSchedule
+    Properties:
+      SecretId: !Ref MySecretC
+      RotationLambdaARN: !GetAtt FunctionCreateCertificate.Arn
+      RotationRules:
+        AutomaticallyAfterDays: 31
+

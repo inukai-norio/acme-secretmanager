@@ -1,0 +1,16 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "acme-secretmanager"
+profile = "default"
+capabilities = "CAPABILITY_NAMED_IAM"
+resolve_s3 = true
+s3_prefix = "acme-secretmanager"
+region = "ap-northeast-1"
+parameter_overrides = [
+    "Domain=example.com",
+    "Zoneid=XXX",
+    "AcmeParametersPrefix=acme"
+]
+
+image_repositories = []
