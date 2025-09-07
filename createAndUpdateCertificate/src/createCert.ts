@@ -28,7 +28,7 @@ async function route53Challenge(action: ChangeAction, recordName: string, record
 async function resolveTxtDns(recordName: string) {
   const retValues: string[][] = await resolveTxt(recordName);
   // レコードに指定した値が含まれていれば終了
-  console.log(retValues)
+  console.log(retValues);
   return retValues.map((v) => v[0]);
 }
 
@@ -44,13 +44,14 @@ async function waitForDnsPropagation(recordName: string, recordValue: string) {
       if (retValues.find((v) => v === recordValue)) {
         return;
       }
-    } catch (err) {
-      console.log(err)
+    }
+    catch (err) {
+      console.log(err);
       // エラーが出ても再度実行
     }
     await new Promise((resolve) => setTimeout(resolve, intervalMs));
   }
-  throw new Error("timeout");
+  throw new Error('timeout');
 }
 
 async function createCrt(client: Client, acmeParam: Param, hostedZoneId: string, csr: CsrBuffer) {
@@ -63,16 +64,16 @@ async function createCrt(client: Client, acmeParam: Param, hostedZoneId: string,
     challengePriority: ['dns-01'],
     challengeCreateFn: async (authz, challenge, keyAuthorization) => {
       if (challenge.type !== 'dns-01') {
-        throw new Error(`This code is "dns-01" only supports. (request: "${challenge.type}")`);        
+        throw new Error(`This code is "dns-01" only supports. (request: "${challenge.type}")`);
       }
       const recordName = mkRecordName(authz);
       await route53Challenge('UPSERT', recordName, keyAuthorization, hostedZoneId);
       // dns が更新されるまで待つ
       await waitForDnsPropagation(recordName, keyAuthorization);
     },
-    challengeRemoveFn:  async (authz, challenge, keyAuthorization) => {
+    challengeRemoveFn: async (authz, challenge, keyAuthorization) => {
       if (challenge.type !== 'dns-01') {
-        throw new Error(`This code is "dns-01" only supports. (request: "${challenge.type}")`);        
+        throw new Error(`This code is "dns-01" only supports. (request: "${challenge.type}")`);
       }
       const recordName = mkRecordName(authz);
       await route53Challenge('DELETE', recordName, keyAuthorization, hostedZoneId);
@@ -85,7 +86,6 @@ export async function createCert(client: Client, acmeParam: Param, domain: strin
   const [privateKey, csr] = await crypto.createCsr({
     commonName: domain,
   }, keyPem);
-
 
   const [key, crt] = await Promise.all([
     privateKey.toString(),

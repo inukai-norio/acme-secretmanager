@@ -8,9 +8,9 @@ import minimist from 'minimist';
     boolean: ['bundle', 'coverage'],
     default: { bundle: false, coverage: false },
   });
-  const entry    = args.entry;
-  const outfile  = args.outfile;
-  const bundle   = args.bundle;
+  const entry = args.entry;
+  const outfile = args.outfile;
+  const bundle = args.bundle;
   const coverage = args.coverage;
 
   if (!entry || !outfile) {
@@ -29,7 +29,8 @@ import minimist from 'minimist';
       sourcemap: coverage ? 'inline' : false,
       sourcesContent: coverage,
     });
-  } catch (e) {
+  }
+  catch (e) {
     console.error(e);
     process.exit(1);
   }

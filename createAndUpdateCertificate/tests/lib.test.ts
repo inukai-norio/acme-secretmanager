@@ -9,14 +9,14 @@ import { mockClient } from 'aws-sdk-client-mock';
 describe('createPrivateKey (spyOn)', () => {
   beforeEach(() => {
     jest.spyOn(crypto, 'createPrivateKey').mockImplementation(
-      async (keySize) => crypto.createPrivateRsaKey(keySize)
-    )
+      async (keySize) => crypto.createPrivateRsaKey(keySize),
+    );
     jest.spyOn(crypto, 'createPrivateRsaKey').mockImplementation(
-      async (keySize = 2048) =>  Buffer.from(`rsa_${keySize}`)
-    )
+      async (keySize = 2048) => Buffer.from(`rsa_${keySize}`),
+    );
     jest.spyOn(crypto, 'createPrivateEcdsaKey').mockImplementation(
-      async (namedCurve = 'P-256') =>  Buffer.from(`ecdsa_${namedCurve}`)
-    )
+      async (namedCurve = 'P-256') => Buffer.from(`ecdsa_${namedCurve}`),
+    );
   });
 
   afterEach(() => {
@@ -29,26 +29,26 @@ describe('createPrivateKey (spyOn)', () => {
   });
 
   it('ecdsa => undefind', async () => {
-    const key = await createPrivateKey({type : 'ecdsa'});
+    const key = await createPrivateKey({ type: 'ecdsa' });
     expect(key).toStrictEqual(Buffer.from('ecdsa_P-256'));
   });
 
   it('ecdsa => P-256', async () => {
-    const key = await createPrivateKey({type : 'ecdsa', curve: 'P-384'});
+    const key = await createPrivateKey({ type: 'ecdsa', curve: 'P-384' });
     expect(key).toStrictEqual(Buffer.from('ecdsa_P-384'));
   });
 
   it('rsa => undefind', async () => {
-    const key = await createPrivateKey({type : 'rsa'});
+    const key = await createPrivateKey({ type: 'rsa' });
     expect(key).toStrictEqual(Buffer.from('rsa_2048'));
   });
 
   it('rsa => 2048', async () => {
-    const key = await createPrivateKey({type : 'rsa', keySize: 4096});
+    const key = await createPrivateKey({ type: 'rsa', keySize: 4096 });
     expect(key).toStrictEqual(Buffer.from('rsa_4096'));
   });
   it('undefind type', async () => {
-    const key = await createPrivateKey({type : undefined});
+    const key = await createPrivateKey({ type: undefined });
     expect(key).toStrictEqual(Buffer.from('rsa_2048'));
   });
 });
@@ -128,7 +128,7 @@ describe('getAcountkey (aws-sdk-client-mock)', () => {
     smMock
       .on(GetSecretValueCommand, { SecretId: 'accountKey', VersionStage: 'AWSCURRENT' })
       .resolves({
-        SecretString: JSON.stringify({accountKey: '1234567890'}),
+        SecretString: JSON.stringify({ accountKey: '1234567890' }),
       });
     smMock
       .on(GetSecretValueCommand, { SecretId: 'accountKey1', VersionStage: 'AWSCURRENT' })
@@ -142,13 +142,13 @@ describe('getAcountkey (aws-sdk-client-mock)', () => {
   });
 
   it('std', async () => {
-    const accountKey = await getAcountkey(<SecretsManagerClient><any>smMock, 'accountKey', 'AWSCURRENT');
+    const accountKey = await getAcountkey(<SecretsManagerClient><unknown>smMock, 'accountKey', 'AWSCURRENT');
 
     expect(accountKey).toBe('1234567890');
   });
   it('error', async () => {
     await expect(async () => {
-      await getAcountkey(<SecretsManagerClient><any>smMock, 'accountKey1', 'AWSCURRENT')
+      await getAcountkey(<SecretsManagerClient><unknown>smMock, 'accountKey1', 'AWSCURRENT');
     }).rejects.toThrow();
   });
 });
