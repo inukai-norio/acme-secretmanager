@@ -141,3 +141,5 @@ vite.config.ts.timestamp-*
 # add
 .aws-sam/
 build/
+samconfig.toml
+template.yaml
