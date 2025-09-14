@@ -1,15 +1,12 @@
 import { defaultProvider } from '@aws-sdk/credential-provider-node';
 import { SecretsManagerClient, PutSecretValueCommand, UpdateSecretVersionStageCommand, ListSecretVersionIdsCommand } from '@aws-sdk/client-secrets-manager';
 import { SecretsManagerRotationEvent } from 'aws-lambda';
-import { createPrivateKey, gatSSMParameter, getAcountkey } from './lib.js';
+import { createPrivateKey, getAccount } from './lib.js';
 import { Client } from 'acme-client';
-import { SSMClient } from '@aws-sdk/client-ssm';
 
 const credentials = await (defaultProvider())();
-const ssm = new SSMClient({ credentials });
 const sm = new SecretsManagerClient({ credentials });
 
-const acmeParametersPrefix = process.env.AcmeParametersPrefix;
 const VersionStage = {
   current: 'AWSCURRENT',
   pending: 'AWSPENDING',
@@ -18,15 +15,15 @@ const VersionStage = {
 export async function handler(event: SecretsManagerRotationEvent) {
   const { SecretId, ClientRequestToken, Step } = event;
   try {
-    const acmeParam = await gatSSMParameter(ssm, `/${acmeParametersPrefix}/`);
-    console.log(acmeParam);
     if (Step === 'createSecret') {
       // 鍵を更新
-      const newAccountKey = await createPrivateKey(acmeParam.acountkey);
+      const currentAcount = await getAccount(sm, SecretId, VersionStage.current);
+      const newAccountKey = await createPrivateKey(currentAcount.keyConfig);
+      currentAcount.key = newAccountKey.toString('ascii');
       await sm.send(new PutSecretValueCommand({
         SecretId,
         ClientRequestToken,
-        SecretString: JSON.stringify({ accountKey: newAccountKey.toString('ascii') }),
+        SecretString: currentAcount.stringify(),
         VersionStages: [VersionStage.pending],
       }));
     }
@@ -34,39 +31,25 @@ export async function handler(event: SecretsManagerRotationEvent) {
       // 鍵を配置
       // 相手先サーバの鍵を更新
       // アカウントキー取得処理
-      const accountKey: string = await (async () => {
-        try {
-          return getAcountkey(sm, SecretId, VersionStage.current);
-        }
-        catch (err) {
-          if (err.name !== 'ResourceNotFoundException') {
-            throw err;
-          }
-          console.log('initial run');
-          return '';
-        }
-      })();
-      const newAccountKey = await getAcountkey(sm, SecretId, VersionStage.pending);
-      if (accountKey === '') {
+      const currentAcount = await getAccount(sm, SecretId, VersionStage.current);
+      const pendingAcount = await getAccount(sm, SecretId, VersionStage.pending);
+      if (typeof currentAcount.key === 'undefined' || currentAcount.key === '') {
         // 初回実行
         const client = new Client({
-          directoryUrl: acmeParam.directoryUrl,
-          accountKey: newAccountKey,
+          directoryUrl: pendingAcount.directoryUrl,
+          accountKey: pendingAcount.key,
         });
-        await client.createAccount({
-          termsOfServiceAgreed: true,
-          contact: [`mailto:${acmeParam.email}`],
-        });
+        await client.createAccount(pendingAcount.object);
       }
       else {
         // 2回目以降の実行
         // ログイン
         const client = new Client({
-          directoryUrl: acmeParam.directoryUrl,
-          accountKey,
+          directoryUrl: pendingAcount.directoryUrl,
+          accountKey: pendingAcount.key,
         });
         // アカウントキー更新処理
-        await client.updateAccountKey(newAccountKey);
+        await client.updateAccountKey(pendingAcount.key);
       }
       return;
     }
