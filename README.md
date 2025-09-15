@@ -41,24 +41,62 @@ cp samconfig.sample.toml samconfig.toml
 sam deploy --guided
 ```
 
-## 設定項目 (SSM Parameter Store)
+### 出力
 
-**※設定はのちに変更になります。**
+- `FunctionCreateAccountArn`
+  - Account 鍵更新 lambda の ARN
+- `FunctionCreateCertificateArn`
+  - TLS 鍵更新 lambda の ARN
 
-SSM Parameter Store に一部設定を保管しています。
+## 設定項目
 
-### 補足
+Secrets Manager に TLS 鍵やアカウント情報を保存します。  
+テンプレートは `secrets-manager.sample.yaml` を参照してください。
 
-- プレフィックス (`myapp`) は `samconfig.toml` の設定値に依存します。
-- Parameter Store の設定例は `parameter.sample.yaml` に CloudFormation サンプルとして用意していますが、利用は任意です（手動設定や OpenTofu なども可）。
+### Account 鍵
+
+| 項目           | 説明                            |
+|----------------|---------------------------------|
+| `keyConfig`    | 鍵の設定（下記参照）              |
+| `object`       | Account 作成時に必要な設定。エスケープされた JSON 文字列で記載する。<br>参照: [RFC 8555 7.1.2. Account Objects](https://datatracker.ietf.org/doc/html/rfc8555#section-7.1.2) |
+| `directoryUrl` | ACME エンドポイント              |
+| `key`          | **Account 秘密鍵 (Private Key)** |
+
+### TLS 鍵
+
+| 項目             | 説明                        |
+|------------------|----------------------------|
+| `keyConfig`      | 鍵の設定（下記参照）         |
+| `domain`         | 証明書を発行するドメイン名    |
+| `hostedZoneId`   | Route53 の Hosted Zone ID  |
+| `AccountSecretId`| 上記 Account 鍵の Secret ID |
+| `key`            | **サーバー秘密鍵 (Private Key, `*.key`)** — サーバーのみが保持する |
+| `crt`            | **サーバー証明書 (Certificate, `*.crt`)** — 公開鍵と CA 署名を含む |
+
+### keyConfig
+
+エスケープされた JSON 文字列で指定します（各項目は任意）。
+
+| 項目     | 説明                       |
+|----------|----------------------------|
+| `type`   | 鍵のアルゴリズム (`rsa` または `ecdsa`) |
+| `curve`  | ECDSA のカーブ名           |
+| `keySize`| RSA のキー長               |
+
+### 用語補足
+
+- **秘密鍵 (`*.key`)**
+  サーバーが保持する非公開の鍵。外部に公開してはいけない。
+- **証明書 (`*.crt`)**
+  公開鍵と認証局 (CA) の署名を含むファイル。クライアントはこれを検証して通信相手の正当性を確認する。
 
 ## 初回実行
 
 初回に鍵の作成が必要なため、Secrets Manager のルーティングを手動で行います。
 
 ```sh
-aws secretsmanager rotate-secret --secret-id "accountKey"
-aws secretsmanager rotate-secret --secret-id "priveteKey"
+aws secretsmanager rotate-secret --secret-id "Account鍵"
+aws secretsmanager rotate-secret --secret-id "TLS鍵"
 ```
 
 以後自動でルーティングしますので、実行は不要です。
@@ -72,21 +110,7 @@ aws secretsmanager rotate-secret --secret-id "priveteKey"
 ### CLI 例
 
 ```sh
-aws secretsmanager get-secret-value --secret-id "priveteKey" --query SecretString --output text
-```
-
-### Node.js (TypeScript) 例
-
-```typescript
-import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
-
-const client = new SecretsManagerClient({ region: "ap-northeast-1" });
-
-const secret = await client.send(
-new GetSecretValueCommand({ SecretId: "priveteKey" })
-);
-
-console.log(secret.SecretString);
+aws secretsmanager get-secret-value --secret-id "TLS鍵" --query SecretString --output text
 ```
 
 ## ライセンス
