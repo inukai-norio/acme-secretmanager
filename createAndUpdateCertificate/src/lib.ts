@@ -1,4 +1,3 @@
-import { SSMClient, paginateGetParametersByPath } from '@aws-sdk/client-ssm';
 import { crypto } from 'acme-client';
 import { GetSecretValueCommand, SecretsManagerClient } from '@aws-sdk/client-secrets-manager';
 
@@ -8,11 +7,58 @@ export interface KeyConfig {
   keySize?: number;
 }
 
-export interface Param {
-  acountkey?: KeyConfig;
-  priveteKey?: KeyConfig;
-  email: string;
+export class Account {
+  keyConfig: KeyConfig;
+  object: object;
   directoryUrl: string;
+  key: string;
+
+  constructor(data: string) {
+    const t = JSON.parse(data) as { [key: string]: string };
+    this.keyConfig = JSON.parse(t.keyConfig) as KeyConfig;
+    this.object = JSON.parse(t.object) as object;
+    this.directoryUrl = t.directoryUrl;
+    this.key = t.key;
+  }
+
+  toString() {
+    return JSON.stringify({
+      keyConfig: JSON.stringify(this.keyConfig),
+      object: JSON.stringify(this.object),
+      directoryUrl: this.directoryUrl,
+      key: this.key,
+    });
+  }
+}
+
+export class Cert {
+  keyConfig: KeyConfig;
+  domain: string;
+  hostedZoneId: string;
+  AccountSecretId: string;
+  key: string;
+  crt: string;
+
+  constructor(data: string) {
+    const t = JSON.parse(data) as { [key: string]: string };
+    this.keyConfig = JSON.parse(t.keyConfig) as KeyConfig;
+    this.domain = t.domain;
+    this.hostedZoneId = t.hostedZoneId;
+    this.AccountSecretId = t.AccountSecretId;
+    this.key = t.key;
+    this.crt = t.crt;
+  }
+
+  toString() {
+    return JSON.stringify({
+      keyConfig: JSON.stringify(this.keyConfig),
+      domain: this.domain,
+      hostedZoneId: this.hostedZoneId,
+      AccountSecretId: this.AccountSecretId,
+      key: this.key,
+      crt: this.crt,
+    });
+  }
 }
 
 export async function createPrivateKey(keyConfig?: KeyConfig) {
@@ -28,7 +74,7 @@ export async function createPrivateKey(keyConfig?: KeyConfig) {
   return crypto.createPrivateKey();
 }
 
-export async function getAcountkey(sm: SecretsManagerClient, SecretId: string, VersionStage: string) {
+export async function getAccount(sm: SecretsManagerClient, SecretId: string, VersionStage: string): Promise<Account> {
   const RawAcountkey = await sm.send(
     new GetSecretValueCommand({
       SecretId,
@@ -38,50 +84,22 @@ export async function getAcountkey(sm: SecretsManagerClient, SecretId: string, V
   if (typeof RawAcountkey.SecretString === 'undefined') {
     throw new Error(`Undefined acountkey`);
   }
-  const { accountKey } = <{ accountKey: string }>JSON.parse(RawAcountkey.SecretString);
-  return accountKey;
+
+  const account = new Account(RawAcountkey.SecretString);
+  return account;
 }
 
-export async function gatSSMParameter(ssm: SSMClient, path: string): Promise<Param> {
-  const notNormalizedOut: { key: string; value: string }[] = [];
-  const out = <Param>{};
-  const paginator = paginateGetParametersByPath(
-    { client: ssm },
-    {
-      Path: path,
-      Recursive: true,
-      WithDecryption: true,
-    },
+export async function getCert(sm: SecretsManagerClient, SecretId: string, VersionStage: string): Promise<Cert> {
+  const RawAcountkey = await sm.send(
+    new GetSecretValueCommand({
+      SecretId,
+      VersionStage,
+    }),
   );
-  for await (const page of paginator) {
-    for (const p of page.Parameters ?? []) {
-      if (typeof p.Name === 'undefined') {
-        continue;
-      }
-      if (typeof p.Value === 'undefined') {
-        continue;
-      }
-      const key = p.Name.replace(`${path}`, '');
-      notNormalizedOut.push({ key, value: p.Value });
-    }
+  if (typeof RawAcountkey.SecretString === 'undefined') {
+    throw new Error(`Undefined acountkey`);
   }
-  notNormalizedOut.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0).forEach((v) => {
-    const splitKeys = v.key.split('/');
-    if (splitKeys.length === 1) {
-      out[v.key] = v.value;
-    }
-    else {
-      let target = out;
-      const key = splitKeys.pop();
-      for (let i = 0; i < splitKeys.length; i++) {
-        const splitKey = splitKeys[i];
-        if (!target[splitKey]) {
-          target[splitKey] = {};
-        }
-        target = target[splitKey];
-      }
-      target[<string>key] = v.value;
-    }
-  });
-  return out;
+
+  const account = new Cert(RawAcountkey.SecretString);
+  return account;
 }
