@@ -45,9 +45,15 @@ async function waitForDnsPropagation(recordName: string, recordValue: string) {
         return;
       }
     }
-    catch (err) {
-      console.log(err);
-      // エラーが出ても再度実行
+    catch (e) {
+      const err = <{ code: string; message: string }>e;
+      if (err.code === 'ENOTFOUND') {
+        console.log(err.message);
+        // エラーが出ても再度実行
+      }
+      else {
+        throw err;
+      }
     }
     await new Promise((resolve) => setTimeout(resolve, intervalMs));
   }
