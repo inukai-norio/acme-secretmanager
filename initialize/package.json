@@ -1,0 +1,27 @@
+{
+  "name": "acme_get_certificate",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [
+    "acme"
+  ],
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "ncu": "npx npm-check-updates",
+    "prestart": "esbuild index.ts --outfile=index.js",
+    "start": "node index.js",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@stylistic/eslint-plugin": "^5.4.0",
+    "@types/node": "^24.5.2",
+    "esbuild": "^0.25.10"
+  },
+  "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.896.0"
+  }
+}

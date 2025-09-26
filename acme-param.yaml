@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  Domain:
+    Type: String
+    Default: inukay.net
+  Zoneid:
+    Type: AWS::Route53::HostedZone::Id
+    Default: Z0585332HKWXAJ04J2K3
+  directoryUrl:
+    Type: String
+    Default: https://acme-staging-v02.api.letsencrypt.org/directory
+  MailAddress:
+    Type: String
+    Default: sen.inukainorio+1@gmail.com
+
+  AccountKey:
+    Type: String
+    Default: acmeAccountKey
+  PriveteKey:
+    Type: String
+    Default: acmePriveteKey
+
+  FunctionCreateAccountArn:
+    Type: String
+  FunctionCreateCertificateArn:
+    Type: String
+
+Resources:
+  SecretAccountKey:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Ref AccountKey
+      Description: "account key"
+      SecretString: !sub |
+        {
+          "keyConfig": "{\"type\": \"ecdsa\", \"curve\": \"P-384\"}",
+          "object": "{\"termsOfServiceAgreed\": true,\"contact\": [\"mailto:${MailAddress}\"]}",
+          "directoryUrl": "${directoryUrl}",
+          "key": ""
+        }
+
+  SecretAccountKeyRotationSchedule:
+    Type: AWS::SecretsManager::RotationSchedule
+    Properties:
+      SecretId: !Ref SecretAccountKey
+      RotationLambdaARN: !Ref FunctionCreateAccountArn
+      RotationRules:
+        AutomaticallyAfterDays: 61
+
+  SecretPriveteKey:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Ref PriveteKey
+      Description: "priveteKey key"
+      SecretString: !Sub |
+        {
+          "keyConfig": "{\"type\": \"ecdsa\", \"curve\": \"P-384\"}",
+          "domain": "${Domain}",
+          "hostedZoneId": "${Zoneid}",
+          "AccountSecretId": "${SecretAccountKey.Id}",
+          "key": "",
+          "crt": ""
+        }
+
+  SecretPriveteKeyRotationSchedule:
+    Type: AWS::SecretsManager::RotationSchedule
+    Properties:
+      SecretId: !Ref SecretPriveteKey
+      RotationLambdaARN: !Ref FunctionCreateCertificateArn
+      RotationRules:
+        AutomaticallyAfterDays: 31
