@@ -92,7 +92,9 @@ Secrets Manager に TLS 鍵やアカウント情報を保存します。
 
 ## 初回実行
 
-初回に鍵の作成が必要なため、Secrets Manager のローテーションを手動で行います。
+あらかじめ `secrets-manager.sample.yaml` 等を用いて、Secrets Manager の Secret と RotationSchedule を作成してください。
+`secrets-manager.sample.yaml` を利用する場合、初回実行が行われ `key` / `crt` が作成されます。
+CLI などで作成した場合初回 `key` / `crt` が空のため、Secrets Manager のローテーションを手動実行して鍵を生成します。
 
 ```sh
 aws secretsmanager rotate-secret --secret-id "acmeAccountKey"
@@ -102,8 +104,6 @@ aws secretsmanager rotate-secret --secret-id "acmePrivateKey"
 以後自動でローテーションしますので、実行は不要です。
 
 ## 利用方法
-
-**※この節の記載は不完全です。**
 
 鍵を Secrets Manager から取得してください。定期的に更新がかかるため、自動で更新する仕組みを作ってください。
 
