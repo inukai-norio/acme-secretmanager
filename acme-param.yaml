@@ -14,9 +14,9 @@ Parameters:
   AccountKey:
     Type: String
     Default: acmeAccountKey
-  PriveteKey:
+  PrivateKey:
     Type: String
-    Default: acmePriveteKey
+    Default: acmePrivateKey
 
   FunctionCreateAccountArn:
     Type: String
@@ -45,11 +45,11 @@ Resources:
       RotationRules:
         AutomaticallyAfterDays: 61
 
-  SecretPriveteKey:
+  SecretPrivateKey:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: !Ref PriveteKey
-      Description: "priveteKey key"
+      Name: !Ref PrivateKey
+      Description: "privateKey key"
       SecretString: !Sub |
         {
           "keyConfig": "{\"type\": \"ecdsa\", \"curve\": \"P-384\"}",
@@ -60,10 +60,10 @@ Resources:
           "crt": ""
         }
 
-  SecretPriveteKeyRotationSchedule:
+  SecretPrivateKeyRotationSchedule:
     Type: AWS::SecretsManager::RotationSchedule
     Properties:
-      SecretId: !Ref SecretPriveteKey
+      SecretId: !Ref SecretPrivateKey
       RotationLambdaARN: !Ref FunctionCreateCertificateArn
       RotationRules:
         AutomaticallyAfterDays: 31

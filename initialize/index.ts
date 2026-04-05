@@ -34,7 +34,7 @@ const accountKeyName = 'acmeAccountKey';
 const mailAddress = 'example@example.com';
 const directoryUrl = 'https://acme-staging-v02.api.letsencrypt.org/directory';
 
-const priveteKeyName = 'acmePriveteKey';
+const privateKeyName = 'acmePrivateKey';
 const domain = 'example.com';
 const zoneId = 'XXX';
 
@@ -56,7 +56,7 @@ const a = new CreateSecretCommand({
   SecretString: toKvJson(account),
 });
 
-const priveteKey = {
+const privateKey = {
   keyConfig: {
     type: 'ecdsa',
     curve: 'P-384',
@@ -68,8 +68,8 @@ const priveteKey = {
   crt: "",
 }
 const c = new CreateSecretCommand({
-  Name: priveteKeyName,
-  SecretString: toKvJson(priveteKey),
+  Name: privateKeyName,
+  SecretString: toKvJson(privateKey),
 });
 
 const aa = await sm.send(a)
