@@ -55,33 +55,33 @@ Secrets Manager に TLS 鍵やアカウント情報を保存します。
 
 ### Account 鍵
 
-| 項目           | 説明                            |
-|----------------|---------------------------------|
-| `keyConfig`    | 鍵の設定（下記参照）              |
-| `object`       | Account 作成時に必要な設定。エスケープされた JSON 文字列で記載する。<br>参照: [RFC 8555 7.1.2. Account Objects](https://datatracker.ietf.org/doc/html/rfc8555#section-7.1.2) |
-| `directoryUrl` | ACME エンドポイント              |
-| `key`          | **Account 秘密鍵 (Private Key)** |
+| 項目 | 説明 |
+| --- | --- |
+| `keyConfig` | 鍵の設定（下記参照） |
+| `object` | Account 作成時に必要な設定。エスケープされた JSON 文字列で記載する。<br>参照: [RFC 8555 7.1.2. Account Objects](https://datatracker.ietf.org/doc/html/rfc8555#section-7.1.2) |
+| `directoryUrl` | ACME エンドポイント |
+| `key` | **Account 秘密鍵 (Private Key)** |
 
 ### TLS 鍵
 
-| 項目             | 説明                        |
-|------------------|----------------------------|
-| `keyConfig`      | 鍵の設定（下記参照）         |
-| `domain`         | 証明書を発行するドメイン名    |
-| `hostedZoneId`   | Route53 の Hosted Zone ID  |
-| `AccountSecretId`| 上記 Account 鍵の Secret ID |
-| `key`            | **サーバー秘密鍵 (Private Key, `*.key`)** — サーバーのみが保持する |
-| `crt`            | **サーバー証明書 (Certificate, `*.crt`)** — 公開鍵と CA 署名を含む |
+| 項目 | 説明 |
+| --- | --- |
+| `keyConfig` | 鍵の設定（下記参照） |
+| `domain` | 証明書を発行するドメイン名 |
+| `hostedZoneId` | Route53 の Hosted Zone ID |
+| `AccountSecretId` | 上記 Account 鍵の Secret ID |
+| `key` | **サーバー秘密鍵 (Private Key, `*.key`)** — サーバーのみが保持する |
+| `crt` | **サーバー証明書 (Certificate, `*.crt`)** — 公開鍵と CA 署名を含む |
 
 ### keyConfig
 
 エスケープされた JSON 文字列で指定します（各項目は任意）。
 
-| 項目     | 説明                       |
-|----------|----------------------------|
-| `type`   | 鍵のアルゴリズム (`rsa` または `ecdsa`) |
-| `curve`  | ECDSA のカーブ名           |
-| `keySize`| RSA のキー長               |
+| 項目 | 説明 |
+| --- | --- |
+| `type` | 鍵のアルゴリズム (`rsa` または `ecdsa`) |
+| `curve` | ECDSA のカーブ名 |
+| `keySize` | RSA のキー長 |
 
 ### 用語補足
 
