@@ -95,8 +95,8 @@ Secrets Manager に TLS 鍵やアカウント情報を保存します。
 初回に鍵の作成が必要なため、Secrets Manager のローテーションを手動で行います。
 
 ```sh
-aws secretsmanager rotate-secret --secret-id "Account鍵"
-aws secretsmanager rotate-secret --secret-id "TLS鍵"
+aws secretsmanager rotate-secret --secret-id "acmeAccountKey"
+aws secretsmanager rotate-secret --secret-id "acmePriveteKey"
 ```
 
 以後自動でローテーションしますので、実行は不要です。
@@ -110,7 +110,7 @@ aws secretsmanager rotate-secret --secret-id "TLS鍵"
 ### CLI 例
 
 ```sh
-aws secretsmanager get-secret-value --secret-id "TLS鍵" --query SecretString --output text
+aws secretsmanager get-secret-value --secret-id "acmePriveteKey" --query SecretString --output text
 ```
 
 ## ライセンス
