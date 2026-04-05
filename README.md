@@ -92,14 +92,14 @@ Secrets Manager に TLS 鍵やアカウント情報を保存します。
 
 ## 初回実行
 
-初回に鍵の作成が必要なため、Secrets Manager のルーティングを手動で行います。
+初回に鍵の作成が必要なため、Secrets Manager のローテーションを手動で行います。
 
 ```sh
 aws secretsmanager rotate-secret --secret-id "Account鍵"
 aws secretsmanager rotate-secret --secret-id "TLS鍵"
 ```
 
-以後自動でルーティングしますので、実行は不要です。
+以後自動でローテーションしますので、実行は不要です。
 
 ## 利用方法
 
