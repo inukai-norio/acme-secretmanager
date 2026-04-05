@@ -3,16 +3,13 @@ AWSTemplateFormatVersion: '2010-09-09'
 Parameters:
   Domain:
     Type: String
-    Default: inukay.net
   Zoneid:
     Type: AWS::Route53::HostedZone::Id
-    Default: Z0585332HKWXAJ04J2K3
   directoryUrl:
     Type: String
     Default: https://acme-staging-v02.api.letsencrypt.org/directory
   MailAddress:
     Type: String
-    Default: sen.inukainorio+1@gmail.com
 
   AccountKey:
     Type: String
